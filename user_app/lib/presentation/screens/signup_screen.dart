@@ -1,5 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:user_app/presentation/providers/auth_provider.dart';
 import '../../core/validation/validators.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -33,12 +37,31 @@ class SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _onSignup() {
-    if (_formKey.currentState!.validate()) {
+  void _onSignup() async {
+    if (!_formKey.currentState!.validate()) {
       // Process signup logic here
-      if (kDebugMode) {
-        print('Signup Successful');
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all correctly.')),
+      );
+      return;
+    }
+
+    final String address =
+        '${_streetController.text.trim()} ${_cityController.text.trim()}, ${_stateController.text.trim()}, ${_zipController.text.trim()}';
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.registerUser(
+      name: _fullNameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      phone: _phoneController.text.trim(),
+      address: address,
+    );
+    if (!authProvider.isLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful. Please login.')),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/auth_provider.dart';
+import '../providers/auth_provider.dart';
 
 class LaunchScreen extends StatelessWidget {
   const LaunchScreen({super.key});
@@ -12,8 +12,8 @@ class LaunchScreen extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
 
     Future.delayed(Duration.zero, () {
-      if (authProvider.isLoggedIn) {
-        Navigator.pushReplacementNamed(context, '/home');
+      if (authProvider.token != null && authProvider.token != '') {
+        Navigator.pushReplacementNamed(context, '/users');
       } else {
         Navigator.pushReplacementNamed(context, '/login');
       }

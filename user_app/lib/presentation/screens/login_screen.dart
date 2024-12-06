@@ -1,6 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/auth_provider.dart';
+import '../providers/auth_provider.dart';
 import '../../core/validation/validators.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,7 +16,6 @@ class LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,32 +25,31 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-    });
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all correctly.')),
+      );
+      return;
+    }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    try {
-      await authProvider.login(_emailController.text, _passwordController.text);
-      // ignore: use_build_context_synchronously
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    authProvider
+        .login(_emailController.text.trim(), _passwordController.text.trim())
+        .then((_) {
+      if (authProvider.token != null && authProvider.token != '') {
+        Navigator.pushReplacementNamed(context, '/users');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid credentials.')),
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Padding(
@@ -80,7 +80,7 @@ class LoginScreenState extends State<LoginScreen> {
                 validator: Validators.validatePassword,
               ),
               const SizedBox(height: 20),
-              _isLoading
+              authProvider.isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _onLogin,
