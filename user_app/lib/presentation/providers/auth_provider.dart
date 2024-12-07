@@ -96,7 +96,10 @@ class AuthProvider with ChangeNotifier {
   }
 
   void logout() {
-    _token = '';
-    _users?.clear();
+    SharedPreferences.getInstance().then((sp) {
+      sp.remove('access_token');
+      _token = '';
+      _users?.clear();
+    });
   }
 }
